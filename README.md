@@ -13,7 +13,7 @@ pnpm dev
 SDK 离线安装方式：
 
 ```bash
-pnpm add ./vendor/twin-studio-viewer-0.1.0.tgz
+pnpm add ./vendor/twin-studio-viewer-0.1.1.tgz
 ```
 
 页面可在 `Mock` 与 `WebSocket` 间切换。WebSocket 测试服务默认监听

@@ -27,10 +27,13 @@ function handleError(message:string) { twin.loadStatus.value = message }
         <button data-testid="source-mock" :class="{active:dataSourceType==='mock'}" @click="dataSourceType='mock'">Mock</button>
         <button data-testid="source-websocket" :class="{active:dataSourceType==='websocket'}" @click="dataSourceType='websocket'">WebSocket</button>
       </div>
-      <div class="live" :class="{offline:twin.connection.value.status!=='connected'}">
+      <div class="live" :class="{offline:twin.connection.value.status!=='connected'}" :title="twin.connection.value.error ?? (dataSourceType === 'websocket' ? webSocketUrl : 'SDK 内置 MockDataSource')">
         <i/>{{ twin.connection.value.type === 'websocket' ? 'WS' : 'MOCK' }} · {{ twin.connection.value.status.toUpperCase() }}
         <small data-testid="source-message-count">{{ twin.connection.value.messages }}</small>
       </div>
+      <p v-if="dataSourceType === 'websocket' && twin.connection.value.status !== 'connected'" class="source-error" data-testid="source-error">
+        {{ twin.connection.value.error ?? `正在连接 ${webSocketUrl}` }}
+      </p>
       <p class="load-status">{{ twin.loadStatus.value }}</p>
       <time>{{ new Date().toLocaleDateString('zh-CN') }}</time>
     </header>

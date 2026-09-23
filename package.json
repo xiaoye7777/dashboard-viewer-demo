@@ -5,14 +5,15 @@
   "type": "module",
   "packageManager": "pnpm@11.19.0",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/dev.mjs",
+    "dev:frontend": "vite",
     "data-server": "node server/realtime-server.mjs",
     "test:integration": "node tests/sdk-integration.mjs",
     "type-check": "vue-tsc --noEmit",
     "build": "pnpm run type-check && vite build"
   },
   "dependencies": {
-    "@twin-studio/viewer": "file:./vendor/twin-studio-viewer-0.1.0.tgz",
+    "@twin-studio/viewer": "file:./vendor/twin-studio-viewer-0.1.1.tgz",
     "three": "0.184.0",
     "vue": "3.5.25"
   },
