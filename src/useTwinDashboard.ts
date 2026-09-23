@@ -27,6 +27,12 @@ export function useTwinDashboard() {
       alarms:devices.value.filter(device => device.alarm).length, soc:average('soc'), temperature:average('temperature'),
       power:numbers('power').reduce((a,b)=>a+b,0) }
   })
+  const connection = computed(() => ({
+    type: runtime.value?.dataSourceType ?? 'mock',
+    status: runtime.value?.dataSourceStatus ?? 'disconnected',
+    messages: runtime.value?.dataSourceMessageCount ?? 0,
+    error: runtime.value?.dataSourceError ?? null,
+  }))
   function handleLoaded(event:{projectName:string;objectCount:number;bindingCount:number}) {
     runtime.value = viewerRef.value?.getRuntimeState() ?? null
     loadStatus.value = `${event.projectName} · ${event.objectCount} 个对象 · ${event.bindingCount} 个设备绑定`
@@ -37,6 +43,6 @@ export function useTwinDashboard() {
     if (viewerRef.value?.selectDevice(deviceId)) await viewerRef.value.focusDevice(deviceId)
   }
   function clearSelection() { viewerRef.value?.clearSelection() }
-  return { viewerRef, runtime, selectedDeviceId, lastEvent, loadStatus, devices, selected, summary,
+  return { viewerRef, runtime, selectedDeviceId, lastEvent, loadStatus, devices, selected, summary, connection,
     handleLoaded, handleSelection, handleInteraction, chooseDevice, clearSelection }
 }

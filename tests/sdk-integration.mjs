@@ -1,6 +1,6 @@
 import { createRequire } from 'node:module'
 import assert from 'node:assert/strict'
-const { chromium } = createRequire(import.meta.url)('playwright')
+const { chromium } = createRequire(import.meta.url)('playwright-core')
 const browser = await chromium.launch({ executablePath:process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless:true })
 const context = await browser.newContext({ viewport:{width:1440,height:1000} })
 await context.addInitScript(() => {
@@ -23,11 +23,36 @@ try {
   const state=await page.evaluate(()=>{const s=window.sdkViewer.getRuntimeState();return {bindings:s.bindings.length,running:s.mockRunning,ticks:s.mockTickCount,values:Object.keys(s.runtimeValues).length,projectId:s.projectId}})
   assert.equal(state.bindings,8);assert(state.running&&state.values===40)
   const before=state.ticks;await page.waitForFunction(t=>window.sdkViewer.getRuntimeState().mockTickCount>t,before)
+  assert.equal((await (await fetch('http://127.0.0.1:8787/status')).json()).connections,0)
+  await page.getByTestId('source-websocket').click()
+  await page.waitForFunction(()=>window.sdkViewer.getRuntimeState().dataSourceStatus==='connected')
+  await page.waitForFunction(()=>window.sdkViewer.getRuntimeState().dataSourceMessageCount>0)
+  assert.equal((await (await fetch('http://127.0.0.1:8787/status')).json()).connections,1)
+  await page.getByTestId('device-ESS-003').click()
+  await page.waitForFunction(()=>window.sdkViewer.getRuntimeState().getRuntimeValue('binding-ess-3','temperature')?.value===75)
+  await page.waitForFunction(()=>window.sdkViewer.getDiagnostics().visualRules.activeRules>=2)
+  const networkState=await page.evaluate(()=>({
+    temperature:window.sdkViewer.getRuntimeState().getRuntimeValue('binding-ess-3','temperature')?.value,
+    status:window.sdkViewer.getRuntimeState().dataSourceStatus,
+    messages:window.sdkViewer.getRuntimeState().dataSourceMessageCount,
+    diagnostics:window.sdkViewer.getDiagnostics(),
+  }))
+  assert.equal(networkState.temperature,75)
+  assert.equal(networkState.status,'connected')
+  assert(networkState.diagnostics.visualRules.activeRules>=2)
+  assert(networkState.diagnostics.effects.helpers>11)
+  assert((await page.locator('.right').textContent()).includes('75.0'))
+  await page.getByTestId('source-mock').click()
+  await page.waitForFunction(()=>window.sdkViewer.getRuntimeState().dataSourceType==='mock'&&window.sdkViewer.getRuntimeState().mockRunning)
+  await page.waitForFunction(async()=>((await (await fetch('http://127.0.0.1:8787/status')).json()).connections===0))
+  const resumedTick=await page.evaluate(()=>window.sdkViewer.getRuntimeState().mockTickCount)
+  await page.waitForFunction(t=>window.sdkViewer.getRuntimeState().mockTickCount>t,resumedTick)
+  await page.getByTestId('source-websocket').click()
+  await page.waitForFunction(()=>window.sdkViewer.getRuntimeState().dataSourceStatus==='connected')
   await page.screenshot({path:'/tmp/dashboard-viewer-sdk-demo.png',fullPage:true})
   assert(await page.evaluate(()=>window.sdkViewer.selectDevice('ESS-001')))
   await page.waitForFunction(()=>window.sdkViewer.getSelection()?.deviceId==='ESS-001')
-  const initialCanvas=await page.locator('[data-testid="twin-scene-viewer"] canvas').boundingBox()
-  await page.mouse.click(initialCanvas.x+initialCanvas.width/2,initialCanvas.y+120)
+  await page.evaluate(()=>window.sdkViewer.clearSelection())
   await page.waitForFunction(()=>window.sdkViewer.getSelection()===null)
   assert(await page.evaluate(()=>window.sdkViewer.focusDevice('ESS-001')))
   const canvas=await page.locator('[data-testid="twin-scene-viewer"] canvas').boundingBox()
@@ -43,6 +68,7 @@ try {
   await page.evaluate(()=>document.querySelector('#app').__vue_app__.unmount())
   await page.waitForTimeout(300)
   assert.deepEqual(await page.evaluate(()=>window.sdkResources()),{urls:0,raf:0})
+  await page.waitForFunction(async()=>((await (await fetch('http://127.0.0.1:8787/status')).json()).connections===0))
   const assetPage=await context.newPage();assetPage.on('pageerror',error=>errors.push(error.message))
   await assetPage.goto(`${base}?package=/sdk-assets-fixture.twin.zip`)
   await assetPage.waitForSelector('[data-testid="twin-scene-viewer"][data-loaded="true"]')
@@ -51,5 +77,5 @@ try {
   await assetPage.evaluate(()=>document.querySelector('#app').__vue_app__.unmount());await assetPage.waitForTimeout(300)
   assert.deepEqual(await assetPage.evaluate(()=>window.sdkResources()),{urls:0,raf:0});await assetPage.close()
   assert.deepEqual(errors,[])
-  console.log(JSON.stringify({packageSource:sourceCheck,threeBindings:state.bindings,mockValues:state.values,primitive:'PASS',glb:'PASS',hdr:'PASS',viewerToDashboard:'PASS',dashboardToViewer:'PASS',interactionEvent:'PASS',dispose:'PASS: Object URLs and RAF released',screenshot:'/tmp/dashboard-viewer-sdk-demo.png'},null,2))
+  console.log(JSON.stringify({packageSource:sourceCheck,threeBindings:state.bindings,mockValues:state.values,webSocket:'PASS: real connection and multi-device RuntimeValue updates',ess003Temperature:networkState.temperature,visualRules:networkState.diagnostics.visualRules,effects:networkState.diagnostics.effects,mockWebSocketExclusion:'PASS',primitive:'PASS',glb:'PASS',hdr:'PASS',viewerToDashboard:'PASS',dashboardToViewer:'PASS',interactionEvent:'PASS',dispose:'PASS: WebSocket, Object URLs and RAF released',screenshot:'/tmp/dashboard-viewer-sdk-demo.png'},null,2))
 } finally {await context.close();await browser.close()}
