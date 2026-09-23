@@ -1,0 +1,18 @@
+{
+  "name": "dashboard-viewer-demo",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@11.19.0",
+  "scripts": { "dev": "vite", "type-check": "vue-tsc --noEmit", "build": "pnpm run type-check && vite build" },
+  "dependencies": {
+    "@twin-studio/viewer": "file:./vendor/twin-studio-viewer-0.1.0.tgz",
+    "three": "0.184.0",
+    "vue": "3.5.25"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1", "@types/three": "0.184.0", "@vitejs/plugin-vue": "6.0.2",
+    "typescript": "5.9.3", "vite": "7.2.4", "vue-tsc": "3.1.5"
+  },
+  "engines": { "node": "^20.19.0 || >=22.12.0" }
+}
