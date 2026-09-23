@@ -26,7 +26,7 @@ function shutdown(exitCode = 0) {
 
 start(process.execPath, ['server/realtime-server.mjs'])
 const viteArgs = process.argv.slice(2)
-start('pnpm', ['exec', 'vite', ...(viteArgs.length ? viteArgs : ['--host', '127.0.0.1', '--port', '5200'])])
+start(process.execPath, ['node_modules/vite/bin/vite.js', ...(viteArgs.length ? viteArgs : ['--host', '127.0.0.1', '--port', '5200'])])
 
 process.on('SIGINT', () => shutdown(0))
 process.on('SIGTERM', () => shutdown(0))

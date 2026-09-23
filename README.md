@@ -1,5 +1,7 @@
 # Reference Dashboard Demo
 
+运行环境：Node.js `20.16.0+`、pnpm `10.20.0`。
+
 完全独立的 Vue 3 + TypeScript Viewer SDK 接入示例，不引用 `twin-Meteor/src`。
 
 ```bash
@@ -13,7 +15,7 @@ pnpm dev
 SDK 离线安装方式：
 
 ```bash
-pnpm add ./vendor/twin-studio-viewer-0.1.1.tgz
+pnpm add ./vendor/twin-studio-viewer-0.1.2.tgz
 ```
 
 页面可在 `Mock` 与 `WebSocket` 间切换。WebSocket 测试服务默认监听
